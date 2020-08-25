@@ -22,35 +22,8 @@ export function FindPeopleView() {
   function searchRefresh(text) {
     setSearch(text);
     firestore()
-      .collection('Users')
-      .where('email', '==', text)
-      .onSnapshot(querySnapshot => {
-        const people = [];
-        querySnapshot.forEach(documentSnapshot => {
-          people.push({
-            ...documentSnapshot.data(),
-            key: documentSnapshot.id,
-          });
-          console.log(text);
-        });
-        setPeople(people);
-      });
-  }
-  // Follows the user found
-  function addFollowing(email) {
-    const subscriber = firestore()
-      .collection('Users')
-      .doc(user.email)
-      .update({
-        Following: firestore.FieldValue.arrayUnion(email),
-      })
-  }
-
-  // Gets the following list
-  useEffect(() => {
-  const subscriber = firestore()
     .collection('Users')
-    .where('email', '==', search)
+    .where('email', '==', text)
     .onSnapshot(querySnapshot => {
       const people = [];
       querySnapshot.forEach(documentSnapshot => {
@@ -58,25 +31,64 @@ export function FindPeopleView() {
           ...documentSnapshot.data(),
           key: documentSnapshot.id,
         });
+        console.log("Searching for:" + text);
       });
-      setPeople(people);
     });
-  // Unsubscribe from events when no longer in use
-  return () => subscriber();
-  }, []);
+  }
+
+  // Follows the user found
+  function addFollowing(email) {
+      firestore()
+      .collection('Users')
+      .doc(user.email)
+      .update({
+        Following: firestore.FieldValue.arrayUnion(email),
+      })
+      console.log("Added:" + email);
+  }
+
+  // Follows the user found
+  function removeFollowing(email) {
+    firestore()
+    .collection('Users')
+    .doc(user.email)
+    .update({
+      Following: firestore.FieldValue.arrayRemove(email),
+    })
+    console.log("Remove Following:" + following);
+  }
+
+  // Gets people that match search, sets it to the people that match
+  useEffect(() => {
+    const subscriber = firestore()
+      .collection('Users')
+      .where('email', '==', search)
+      .onSnapshot(querySnapshot => {
+        const people = [];
+        querySnapshot.forEach(documentSnapshot => {
+          people.push({
+            ...documentSnapshot.data(),
+            key: documentSnapshot.id,
+          });
+        });
+        setPeople(people);
+      });
+    // Unsubscribe from events when no longer in use
+    return () => subscriber();
+  }, [people]);
 
   // Gets the following list
   useEffect(() => {
-  const subscriber = firestore()
-    .collection('Users')
-    .doc(user.email)
-    .onSnapshot(documentSnapshot => {
-       setFollowing(documentSnapshot.data().Following);
-       console.log(following);
-     });
+      const subscriber = firestore()
+        .collection('Users')
+        .doc(user.email)
+        .onSnapshot(documentSnapshot => {
+           setFollowing(documentSnapshot.data().Following);
+           console.log("Updated Following List:" + following);
+         });
   // Unsubscribe from events when no longer in use
   return () => subscriber();
-  }, []);
+}, [following]);
 
 
 
@@ -102,7 +114,7 @@ export function FindPeopleView() {
                 renderItem={({ item }) => (
                   <View style={{ height: 50, flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                     <Text> {item.email}</Text>
-                    {following.includes(item.email) ? <Button title='Friends'/> :
+                    {following.includes(item.email) ? <Button title='Friends' onPress={() => removeFollowing(item.email)}/> :
                       <Button title="Add new Friend" onPress={() => addFollowing(item.email)}/>}
                       </View>
                 )}

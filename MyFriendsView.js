@@ -30,7 +30,6 @@ export function Friends() {
       });
       setFollowers(followers);
       setLoading(false);
-      console.log(followers)
     });
   // Unsubscribe from events when no longer in use
   return () => subscriber();
@@ -43,7 +42,6 @@ export function Friends() {
     .doc(user.email)
     .onSnapshot(documentSnapshot => {
        setFollowing(documentSnapshot.data().Following);
-       console.log(following);
        setLoading(false);
      });
   // Unsubscribe from events when no longer in use
